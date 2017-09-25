@@ -1,0 +1,79 @@
+<style>
+	.img-container {
+		width: 100%;
+		text-align: center;
+	}
+	ul { 
+		list-style-type: disc; 
+		list-style-position: inside; 
+	}
+	ol { 
+		list-style-type: decimal; 
+		list-style-position: inside; 
+	}
+	ul ul, ol ul { 
+		list-style-type: circle; 
+		list-style-position: inside; 
+		margin-left: 15px; 
+	}
+	ol ol, ul ol { 
+		list-style-type: decimal; 
+		list-style-position: inside; 
+		margin-left: 15px; 
+	}
+</style>
+<h4>תיאור כללי</h4>
+<p>מודל זה בא להדגים את הקשר בין התפשטות האש דרך יער לבין רמת הדחיסות של העצים בתוכו. בנוסף, מודל זה משמש כדוגמה לגורם משותף שיש למערכות מורכבות: קיומו של ערך סף לא לינארי או פרמטר קריטי.</p>
+<h4>הפעלת המודל</h4>
+<h5>פעולות בסיסיות</h5>
+<div class="img-container"><img src="./resources/models/Fire/img01.png" /></div>
+<ul>
+    <li>S – setup: אתחול העולם לפי ערכי הבוררים/בקרים השונים שיש במודל.</li>
+    <li>G – go: הפעלה ועצירה של המודל, לסירוגין.<br />הערה: עצירת המודל אינה מאפסת אותו אלא רק משהה את ריצתו.</li>
+    <li>J – slow-go: דומה ל-GO אך בין כל פעימת שעון (הרצת המודל למשך פעימת שעון אחת) ישנה מרווח זמן שניתן לקבוע מראש.</li>
+    <li>X – stop-sonification: הפסקת כל הסוניפיקציות במודל.<br />הערה: עצירת הסוניפיקציה אינה עוצרת את ריצת המודל.</li>
+</ul>
+<h5>התאמת המודל</h5>
+<div class="img-container"><img src="./resources/models/Fire/img02.png" /></div>
+<ul>
+    <li>R – reset-on-setup?: קובע האם לכבות את כל המתגים כאשר לוחצים על כפתור ה-SETUP.</li>
+    <li>Interval-between-go: קובע את המרווח של SLOW GO.</li>
+    <li>Audiograph-sonification-orientation?: קובע תצורת הסוניפיקציה של מספר גרפים במקביל: האם את כולם להשמיע כרגיל, או שאם מושמעים מספר גרפים במקביל, להטות את הראשון לצד שמאל, את השני לצאת ימין, את השלישי למרכז וכו' בצורה ציקלית.</li>
+ </ul>
+<h5>כיוונון המודל</h5>
+<div class="img-container"><img src="./resources/models/Fire/img03.png" /></div>
+<ul> 
+    <li>1,2 – density: צפיפות העצים ביער
+        <ul>
+            <li>ערך מינימלי: 0</li>
+            <li>ערך מקסימלי: 99</li>
+            <li>מרווח בין שנתות: 1</li>
+            <li>עדכון המודל: לחיצה על כפתור ה-SETUP</li>
+        </ul>
+    </li>
+</ul>
+<h5>סוניפיקצית גרפים</h5>
+<p>סוניפיקצית מסוג זה מאופיינת ע"י נגינת תו רצוף באמצעות כלי נגינה מסוים. ה-pitch של הצליל שנוצר משתנה על פי הערך שהגרף מקבל: ככל שהערך גבוה יותר, כך גם ה-pitch עולה וככל שהערך נמוך יותר, כך גם ה-pitch יורד.</p>
+<div class="img-container"><img src="./resources/models/Fire/img04.png" /></div>
+<ul>
+    <li>P – percent-burned-sonification?: סוניפיקצית אחוז העצים שנשרפו.</li>
+    <li>M – fire-distance-sonification?: סוניפיקצית המרחק המקסימלי אליו התפשטה האש.</li>
+</ul>
+<h5>סוניפיקצית אזור בעולם</h5>
+<div class="img-container"><img src="./resources/models/Fire/img05.png" /></div>
+<ul>
+    <li>] – remaining-trees-window?: סוניפיקצית כמות העצים שנותרו לא שרופים בתוך החלון.</li>
+    <li>A – up: הזזת החלון כלפי מעלה.</li>
+    <li>Z – down: הזזת החלון כלפי מטה.</li>
+    <li>Q – left: הזזת החלון לכיוון שמאל.</li>
+    <li>W – right: הזזת החלון לכיוון ימין.</li>
+    <li>5,6 – window-stride: המרחק שבו יזוז החלון בלחיצה על אחד מארבעת הכפתורים הנ"ל.</li>
+    <li>3,4 – window-radius: גודל החלון (במודל זה ניתן לשנות את גודל החלון). אורך צלע החלון שווה ל: (2*window-radius + 1)</li>
+</ul>
+<h4>ספרות ומקורות</h4>
+<div dir="ltr">
+    <ul>
+        <li>Wilensky, U. (1997). NetLogo Fire model. <a href="http://ccl.northwestern.edu/netlogo/models/Fire" target="_blank">http://ccl.northwestern.edu/netlogo/models/Fire</a>. Center for Connected Learning and Computer-Based Modeling, Northwestern University, Evanston, IL.</li>
+        <li>Wilensky, U. (1999). NetLogo. <a href="http://ccl.northwestern.edu/netlogo/" target="_blank">http://ccl.northwestern.edu/netlogo/</a>. Center for Connected Learning and Computer-Based Modeling, Northwestern University, Evanston, IL.</li>
+    </ul>
+</div>

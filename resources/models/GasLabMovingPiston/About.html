@@ -1,0 +1,149 @@
+<style>
+	.img-container {
+		width: 100%;
+		text-align: center;
+	}
+	ul { 
+		list-style-type: disc; 
+		list-style-position: inside; 
+	}
+	ol { 
+		list-style-type: decimal; 
+		list-style-position: inside; 
+	}
+	ul ul, ol ul { 
+		list-style-type: circle; 
+		list-style-position: inside; 
+		margin-left: 15px; 
+	}
+	ol ol, ul ol { 
+		list-style-type: decimal; 
+		list-style-position: inside; 
+		margin-left: 15px; 
+	}
+</style>
+<h4>תיאור כללי</h4>
+<p>מודל זה כולל קופסא ובתוכה גז. הקופסא מיוצגת על ידי המרובע בעל המסגרת הצהובה בעוד שמולקולות הגז מיוצגות ע"י העיגולים הקטנים. בנוסף, בקופסא ישנה בוכנה אפורה אשר נעה למעלה ולמטה. מולקולות הגז מרוכזות מתחת לבוכנה.
+מולקולות הגז נעות בתוך הקופסא, מתנגשות בדפנותיה ויכולות להתנגש אחת בשנייה (ישנה הגדרה המאפשרת לאפשר או לא לאפשר התנגשויות מסוג זה). כתוצאה מכך, מולקולות אלו משנות את מסלול התנועה שלהן ואת מהירותן. ישנם שלושה צבעים של מולקולות שמשמעותם היא מהירות המולקולות:
+<ul>
+    <li>מולקולות אדומות: מולקולות בעלות מהירות גבוהה.</li>
+    <li>מולקולות ירוקות: מולקולות בעלות מהירות ממוצעת (ביחס לכל המולקולות).</li>
+    <li>מולקולות כחולות: מולקולות בעלות מהירות נמוכה.</li>
+</ul>
+ירידת הבוכנה גורמת לדחיסת מולקולות הגז במקום קטן יותר (הקטנת נפח הקופסא הזמין עבור תנועת המולקולות) ועליית מקטינה את הלחץ (הגדלת נפח הקופסא הזמין עבור תנועת המולקולות)
+מודל זה בא ללמד אותנו על ההיבטים הבאים:
+<ul>
+    <li>השפעת נפח הקופסה על הלחץ.</li>
+    <li>השפעת כמות המולקולות על הלחץ.</li>
+    <li>השפעת כמות מולקולות ומהירותן על הלחץ בקופסא.</li>
+    <li>וכו'.</li>
+</ul>
+</p>
+<h4>הפעלת המודל</h4>
+<h5>פעולות בסיסיות</h5>
+<div class="img-container"><img src="./resources/models/GasLabMovingPiston/img01.png" /></div>
+<ul> 
+    <li>S – setup: אתחול העולם לפי ערכי הבוררים/בקרים השונים שיש במודל.</li>
+    <li>G – go: הפעלה ועצירה של המודל, לסירוגין.<br />הערה: עצירת המודל אינה מאפסת אותו אלא רק משהה את ריצתו.</li>
+    <li>J – slow-go: דומה ל-GO אך בין כל פעימת שעון (הרצת המודל למשך פעימת שעון אחת) ישנה מרווח זמן שניתן לקבוע מראש.</li>
+    <li>X – stop-sonification: הפסקת כל הסוניפיקציות במודל.<br />הערה: עצירת הסוניפיקציה אינה עוצרת את ריצת המודל.</li>
+</ul>
+<h5>התאמת המודל</h5>
+<div class="img-container"><img src="./resources/models/GasLabMovingPiston/img02.png" /></div>
+<ul>
+    <li>R – reset-on-setup?: קובע האם לכבות את כל המתגים כאשר לוחצים על כפתור ה-SETUP.</li>
+    <li>Interval-between-go: קובע את המרווח של SLOW GO.</li>
+    <li>Audiograph-sonification-orientation?: קובע תצורת הסוניפיקציה של מספר גרפים במקביל: האם את כולם להשמיע כרגיל, או שאם מושמעים מספר גרפים במקביל, להטות את הראשון לצד שמאל, את השני לצאת ימין, את השלישי למרכז וכו' בצורה ציקלית.</li>
+    <li>H – sonify-from-history?: קובע האם לבצע סוניפיקציה של גרפים באמצעות חסמים גלובליים, או חסמים לוקאליים לפי ההיסטוריה האחרונה של כל גרף. הפעלת תכונה זו מאפשר לשמוע ביתר קלות הבדלים קטנים בגרפים. אבל, יש לקחת בחשבון שפעולה זו לא משקפת תמונה מלאה של הגרף.</li>
+ </ul>
+<h5>כיוונון המודל</h5>
+<div class="img-container"><img src="./resources/models/GasLabMovingPiston/img03.png" /></div>
+<ul> 
+    <li>1,2 – box-height: קובע את גובה הקופסא.
+        <ul>
+            <li>ערך מינימלי: 30</li>
+            <li>ערך מקסימלי: 100</li>
+            <li>מרווח בין שנתות: 1</li>
+            <li>עדכון המודל: לחיצה על כפתור ה-SETUP</li>
+        </ul>
+    </li>
+    <li>3,4 – box-width: קובע את רוחב הקופסא.
+        <ul>
+            <li>ערך מינימלי: 20</li>
+            <li>ערך מקסימלי: 80</li>
+            <li>מרווח בין שנתות: 1</li>
+            <li>עדכון המודל: לחיצה על כפתור ה-SETUP</li>
+        </ul>
+    </li>
+    <li>1,2 – number: קובע את מספר מולקולות הגז בקופסא.
+        <ul>
+            <li>ערך מינימלי: 1</li>
+            <li>ערך מקסימלי: 4000</li>
+            <li>מרווח בין שנתות: 1</li>
+            <li>עדכון המודל: לחיצה על כפתור ה-SETUP</li>
+        </ul>
+    </li>
+    <li>3,4 – piston-speed: קובע את המהירות ירידת ועליית הבוכנה
+        <ul>
+            <li>ערך מינימלי: 0</li>
+            <li>ערך מקסימלי: 10</li>
+            <li>מרווח בין שנתות: 0.05</li>
+            <li>עדכון המודל: אוטומטי</li>
+        </ul>
+    </li>
+</ul>
+<h5>סוניפיקצית גרפים</h5>
+<p>סוניפיקצית מסוג זה מאופיינת ע"י נגינת תו רצוף באמצעות כלי נגינה מסוים. ה-pitch של הצליל שנוצר משתנה על פי הערך שהגרף מקבל: ככל שהערך גבוה יותר, כך גם ה-pitch עולה וככל שהערך נמוך יותר, כך גם ה-pitch יורד.
+    <div class="img-container"><img src="./resources/models/GasLabMovingPiston/img04.png" /></div>
+    <ul>
+        <li>P – volume?: סוניפיקצית אחוז הנפח הקופסא מתחת לבוכנה ביחס לנפח כל הקופסא.</li>
+        <li>O – pressure?: סוניפיקצית הלחץ בקופסא</li>
+        <li>I – pressure-vs-volume?: סוניפיקצית ה-volume? וגם סוניפיקצית ה-pressure?.</li>
+        <li>U – pressure-times-volume?: סוניפיקצית נפח הקופסא מתחת לבוכנה כפול הלחץ בה.</li>
+        <li>Y – sonify-fast?: סוניפיקצית אחוז המולקולות בעלות מהירות גבוה.</li>
+        <li>T – sonify-average?: סוניפיקצית אחוז המולקולות בעלות מהירות ממוצעת.</li>
+        <li>L – sonify-slow?: סוניפיקצית אחוז המולקולות בעלות מהירות נמוכה.</li>
+    </ul>
+</p>
+<h5>סוניפיקצית מולקולה בודדת</h5>
+<div class="img-container"><img src="./resources/models/GasLabMovingPiston/img05.png" /></div>
+<ul>
+    <li>N – dash-particle?: סוניפיקצית מיקומה של המולקולה, ומהירותה:
+        <ul>
+            <li>מיקום:
+                <ul>
+                    <li>מיקום אופקי ע"י הטיית הצליל לצד ימין או לצד שמאל בהתאם למיקומה היחסי של המולקולה בעולם.</li>
+                    <li>מיקום אנכי ע"י הגברת/הנמכת הצליל ככל שהמולקולה קרובה יותר לקצה התחתון/העליון בהתאמה.</li>
+                </ul>
+            </li>
+        </ul>
+    </li>
+    <li>
+        <ul>
+            <li>מהירות:</li>
+            <ul>
+                <li>9,0 – dash-stride: קובע את המרחק שעל האלקטרונים לעבור כדי להשמיע צליל מסוים. ככל שקצב השמעת הצלילים גבוה יותר, כך גם מהירות האלקטרון ולהיפך.</li>
+            </ul>
+            <li>B – particle-collisions?: סוניפיקצית התנגשויות המולקולה במולקולות אחרות: בכל פעם שהמולקולה מתנגשת במולקולה אחרת, מושמע צליל התנגשות. גם כאן, בדומה ל-dash-particle? יש הטיית צליל לצדדים ושינוי עוצמת הצליל בהתאם למיקום בעולם בו התרחשה ההתנגשות.</li>
+            <li>V – wall-hits?: בכל פעם שהמולקולה מתנגשת בדופן הקופסא, מושמע צליל התנגשות (צליל שונה מזה של particle-collisions?). גם כאן, בדומה ל-dash-particle? יש הטיית צליל לצדדים ושינוי עוצמת הצליל בהתאם למיקום בעולם בו התרחשה ההתנגשות.</li>
+        </ul>
+    </li>
+</ul>
+<h5>סוניפיקצית אזור בעולם</h5>
+<div class="img-container"><img src="./resources/models/GasLabMovingPiston/img06.png" /></div>
+<ul>
+    <li>] – energy-window?: סוניפיקצית אנרגית מולקולות הגז אשר נמצאות בתוך חלון ההזזה כאחוז מאנרגית כל המולקולות בעולם.</li>
+    <li>A – up: הזזת החלון כלפי מעלה.</li>
+    <li>Z – down: הזזת החלון כלפי מטה.</li>
+    <li>Q – left: הזזת החלון לכיוון שמאל.</li>
+    <li>W – right: הזזת החלון לכיוון ימין.</li>
+    <li>#,$ - window-stride: המרחק שבו יזוז החלון בלחיצה על אחד מארבעת הכפתורים הנ"ל.</li>
+    <li>!@ - window-radius: גודל החלון (במודל זה ניתן לשנות את גודל החלון). אורך צלע החלון שווה ל: (2*window-radius + 1)</li>
+</ul>
+<h4>ספרות ומקורות</h4>
+<div dir="ltr">
+    <ul>
+        <li>Wilensky, U. (2002). NetLogo GasLab Moving Piston model. <a href="http://ccl.northwestern.edu/netlogo/models/GasLabMovingPiston" target="_blank">http://ccl.northwestern.edu/netlogo/models/GasLabMovingPiston</a>. Center for Connected Learning and Computer-Based Modeling, Northwestern University, Evanston, IL.</li>
+        <li>Wilensky, U. (1999). NetLogo. <a href="http://ccl.northwestern.edu/netlogo/" target="_blank">http://ccl.northwestern.edu/netlogo/</a>. Center for Connected Learning and Computer-Based Modeling, Northwestern University, Evanston, IL.</li>
+    </ul>
+</div>
