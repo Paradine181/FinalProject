@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+	<head>
+		<meta charset="UTF-8">
+  		<meta name="description" content="Listening to Complex Systems">
+  		<meta name="keywords" content="Listening, Sonification, NetLogo, Model, Models, Accessibility, Science, Physics, Chemistry, Biology, Electricity">
+		<meta name="author" content="Ilia Butvinnik, Yair Seeman">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Listening to Complex Systems</title>
+	</head>
+
+	<body class="ltcs-column scrollable">
+        <header class="ltcs-item-constant ltcs-row foreground-orange background-black">
+            <img class="ltcs-vertical-center scalable-image" src="resources/images/logo.png" alt="Listening to Complex Systems" />
+            <h1 class="ltcs-vertical-center">מקשיבים למערכות מורכבות</h1>
+        </header>
+
+        <section class="ltcs-item-flexible ltcs-row">
+            <nav class="ltcs-item-constant navigation-vertical ltcs-container background-teal">
+                <header class="hidden">
+                    <h2 aria-label="Models List">Models</h2>
+                </header>
+                <ul>
+                    <li><button id="Introduction">כללי</button></li>
+                    <li><button id="Neils">מודל החשמל - נילס</button></li>
+                    <li><button id="GasLab">מודל הגז</button></li>
+                    <li><button id="GasLabMovingPiston">מודל הגז עם בוכנה נעה</button></li>
+                    <li><button id="Ising">מודל Ising</button></li>
+                    <li><button id="Crystalization">מודל קריסטליזציה</button></li>
+                    <li><button id="SimpleKinetics1">מודל Simple Kinetics 1</button></li>
+                    <li><button id="SimpleKinetics2">מודל Simple Kinetics 2</button></li>
+                    <li><button id="SimpleKinetics3">מודל Simple Kinetics 3</button></li>
+                    <li><button id="Fire">מודל האש</button></li>
+                    <li><button id="WolfSheepPredation">מודל Wolf Sheep Predation</button></li>
+                </ul>
+            </nav>
+
+            <main class="ltcs-item-flexible ltcs-first-item ltcs-column">
+                <header class="ltcs-item-constant ltcs-row navigation foreground-white background-teal">
+                    <h2>Introduction</h2>
+                </header>
+
+                <article class="ltcs-item-flexible ltcs-column model-content">
+                    <header class="ltcs-item-constant ltcs-container-horizontal foreground-black background-gray">
+                        <h3>Accessibility</h3>
+                    </header>
+                	<div class="ltcs-item-flexible ltcs-first-item ltcs-row">
+	                	<div class="ltcs-container ltcs-item-flexible model-content-text foreground-black background-gray-light scrollable">
+                        </div>
+                        <aside class="ltcs-item-constant gallery ltcs-column background-gray-light scrollable">
+                        </aside>
+                	</div>
+                </article>
+            </main>
+        </section>
+
+        <footer class="ltcs-item-constant ltcs-row foreground-orange background-black ltcs-container">
+            <cite class="ltcs-item-constant ltcs-vertical-center ltcs-first-item foreground-white">מגישים:</cite>
+            <cite class="ltcs-item-constant ltcs-vertical-center foreground-gray">
+                <ul class="unstyled-list">
+                    <li>איליה בוטביניק</li>
+                    <li>יאיר זימן</li>
+                </ul>
+            </cite>
+            <cite class="ltcs-item-constant ltcs-vertical-center foreground-white">בהנחיית:</cite>
+            <cite class="ltcs-item-constant ltcs-vertical-center foreground-gray">
+                <ul class="unstyled-list">
+                    <li>ד"ר שרונה ט. לוי</li>
+                </ul>
+            </cite>
+            <div class="ltcs-item-flexible"></div>
+            <a class="ltcs-item-constant ltcs-vertical-center" href="https://ccl.northwestern.edu/netlogo/" target="_blank">NetLogo</a>
+            <a class="ltcs-item-constant ltcs-vertical-center" href="https://ccl.northwestern.edu/netlogo/" target="_blank">
+                <img src="resources/images/netlogo.png" alt="NetLogo - multi-agent programmable modeling environment" />
+            </a>
+        </footer>
+
+        <div class="gallery-modal fade-in is-paused">
+  			<span class="close">&times;</span>
+  			<div class="modal-content">
+				<img class="modal-image" src="#" alt="#">
+  				<div class="model-caption"></div>
+			</div>
+        </div>
+
+        <script async type="text/javascript" src="scripts/main.js"></script>
+        <script async type="text/javascript" src="scripts/highlight-nl.min.js"></script> <!-- javascript for highlighting NetLogo code (not ours, public license): https://github.com/NetLogo/highlight-nl -->
+        <noscript id="deferred-styles">
+    		<link href="https://fonts.googleapis.com/css?family=Sofia" rel="stylesheet">
+            <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+            <link href="https://fonts.googleapis.com/css?family=Arimo" rel="stylesheet">
+    		<link href="styles/main.css" rel="stylesheet" type="text/css">
+    		<link href="styles/highlight-nl.css" rel="stylesheet" type="text/css"> <!-- css for highlighting NetLogo code (not ours, public license): https://github.com/NetLogo/highlight-nl -->
+        </noscript>
+	</body>
+</html>
