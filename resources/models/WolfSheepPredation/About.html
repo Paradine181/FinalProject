@@ -1,0 +1,153 @@
+<style>
+	.img-container {
+		width: 100%;
+		text-align: center;
+	}
+	ul { 
+		list-style-type: disc; 
+		list-style-position: inside; 
+	}
+	ol { 
+		list-style-type: decimal; 
+		list-style-position: inside; 
+	}
+	ul ul, ol ul { 
+		list-style-type: circle; 
+		list-style-position: inside; 
+		margin-left: 15px; 
+	}
+	ol ol, ul ol { 
+		list-style-type: decimal; 
+		list-style-position: inside; 
+		margin-left: 15px; 
+	}
+</style>
+<h4>תיאור כללי</h4>
+<p>מודל זה מציג את היציבות או חוסר היציבות של מערכות אקולוגיות בהן יש טורפים וטרפים. כאשר אחד מהגורמים בשרשרת המזון נכחד, הדבר יכול להוביל להיכחדות של גורמים אחרים בשרשרת. מצד שני, ניתן לראות מצבים בהם גורם אחד מתרבה כל כך מהר והאוכלוסייה בו כל כך גדולה שהוא מצליח לטרוף את כל הטרף שנגיש עבורו ובכך להביא להכחדת המינים גם של הטרף וגם של הטורף עצמו.</p>
+<h4>הפעלת המודל</h4>
+<h5>פעולות בסיסיות</h5>
+<div class="img-container"><img src="./resources/models/WolfSheepPredation/img01.png" /></div>
+<ul>
+    <li>S – setup: אתחול העולם לפי ערכי הבוררים/בקרים השונים שיש במודל.</li>
+    <li>G – go: הפעלה ועצירה של המודל, לסירוגין.<br />הערה: עצירת המודל אינה מאפסת אותו אלא רק משהה את ריצתו.</li>
+    <li>J – slow-go: דומה ל-GO אך בין כל פעימת שעון (הרצת המודל למשך פעימת שעון אחת) ישנה מרווח זמן שניתן לקבוע מראש.</li>
+    <li>X – stop-sonification: הפסקת כל הסוניפיקציות במודל.<br />הערה: עצירת הסוניפיקציה אינה עוצרת את ריצת המודל.</li>
+</ul>
+<h5>התאמת המודל</h5>
+<div class="img-container"><img src="./resources/models/WolfSheepPredation/img02.png" /></div>
+<ul>
+    <li>R – reset-on-setup?: קובע האם לכבות את כל המתגים כאשר לוחצים על כפתור ה-SETUP.</li>
+    <li>Interval-between-go: קובע את המרווח של SLOW GO.</li>
+    <li>Audiograph-sonification-orientation?: קובע תצורת הסוניפיקציה של מספר גרפים במקביל: האם את כולם להשמיע כרגיל, או שאם מושמעים מספר גרפים במקביל, להטות את הראשון לצד שמאל, את השני לצאת ימין, את השלישי למרכז וכו' בצורה ציקלית.</li>
+    <li>H – sonify-from-history?: קובע האם לבצע סוניפיקציה של גרפים באמצעות חסמים גלובליים, או חסמים לוקאליים לפי ההיסטוריה האחרונה של כל גרף. הפעלת תכונה זו מאפשר לשמוע ביתר קלות הבדלים קטנים בגרפים. אבל, יש לקחת בחשבון שפעולה זו לא משקפת תמונה מלאה של הגרף.</li>
+</ul>
+<div class="img-container"><img src="./resources/models/WolfSheepPredation/img03.png" /></div>
+<ul>
+    <li>Stop-count-on-zero-value?: קובע האם עבור מונים יש לעצור/להפסיק את הסוניפיקציה שלהם כאשר ערכם מתאפס.P.</li>
+    <li>Auto-resume-count?: קובע האם להחזיר סוניפיקציה של מונה כאשר ערכו מתעדכן (אחרי שהיה 0) או להפסיק אותה לצמיתות.P.</li>
+    <li>Auto-correct-unbound-values?: עבור גרפים אשר חסמיהם לא נבחרו בצורה מדויקת, קובע האם לעדכן חסמים אלו כאשר מתגלה חריגה מגבולותיהן.P.</li>
+</ul>
+<h5>כיוונון המודל</h5>
+<div class="img-container"><img src="./resources/models/WolfSheepPredation/img04.png" /></div>
+<ul>
+    <li>M – grass?: קובע האם דשא, כאשר נאכל, נעלם מהעולם או נשאר קבוע.</li>
+    <li>1,2 – grass-regrowth-time: קובע את הזמן שלוקח לדשא לגדול מחדש אם הוא נאכל (ומתג ה-GRASS? מורם).
+        <ul>
+            <li>ערך מינימלי: 0</li>
+            <li>ערך מקסימלי: 100</li>
+            <li>מרווח בין שנתות: 1</li>
+            <li>עדכון המודל: אוטומטי</li>
+        </ul>
+    </li>
+</ul>
+<div class="img-container"><img src="./resources/models/WolfSheepPredation/img05.png" /></div>
+<ul>
+    <li>3,4 – initial-number-sheep: כמות התחלתית של כבשים בעולם.
+        <ul>
+            <li>ערך מינימלי: 0</li>
+            <li>ערך מקסימלי: 250</li>
+            <li>מרווח בין שנתות: 1</li>
+            <li>עדכון המודל: לחיצה על כפתור ה-SETUP</li>
+        </ul>
+    </li>
+    <li>5,6 – sheep-gain-from-food: האנרגיה שכל כיבשה רוכשת מאכילת דשא.
+        <ul>
+            <li>ערך מינימלי: 0</li>
+            <li>ערך מקסימלי: 50</li>
+            <li>מרווח בין שנתות: 1</li>
+            <li>עדכון המודל: אוטומטי</li>
+        </ul>
+    </li>
+    <li>7,8 – sheep-reproduce: ההסתברות שכיבשה תתרבה.
+        <ul>
+            <li>ערך מינימלי: 1</li>
+            <li>ערך מקסימלי: 20</li>
+            <li>מרווח בין שנתות: 1</li>
+            <li>עדכון המודל: אוטומטי</li>
+        </ul>
+    </li>
+</ul>
+<div class="img-container"><img src="./resources/models/WolfSheepPredation/img06.png" /></div>
+<ul>
+    <li>9,0 – initial-number-wolves: כמות התחלתית של זאבים בעולם.
+        <ul>
+            <li>ערך מינימלי: 0</li>
+            <li>ערך מקסימלי: 250</li>
+            <li>מרווח בין שנתות: 1</li>
+            <li>עדכון המודל: לחיצה על כפתור ה-SETUP</li>
+        </ul>
+    </li>
+    <li>-,= – wolf-gain-from-food: האנרגיה שכל זאב רוכש מאכילת כיבשה.
+        <ul>
+            <li>ערך מינימלי: 0</li>
+            <li>ערך מקסימלי: 100</li>
+            <li>מרווח בין שנתות: 1</li>
+            <li>עדכון המודל: אוטומטי</li>
+        </ul>
+    </li>
+    <li>7,8 – wolf-reproduce: ההסתברות שזאב יתרבה.
+        <ul>
+            <li>ערך מינימלי: 0</li>
+            <li>ערך מקסימלי: 20</li>
+            <li>מרווח בין שנתות: 1</li>
+            <li>עדכון המודל: אוטומטי</li>
+        </ul>
+    </li>
+</ul>
+<h5>סוניפיקצית גרפים</h5>
+<p>סוניפיקצית מסוג זה מאופיינת ע"י נגינת תו רצוף באמצעות כלי נגינה מסוים. ה-pitch של הצליל שנוצר משתנה על פי הערך שהגרף מקבל: ככל שהערך גבוה יותר, כך גם ה-pitch עולה וככל שהערך נמוך יותר, כך גם ה-pitch יורד.</p>
+<div class="img-container"><img src="./resources/models/WolfSheepPredation/img07.png" /> <img src="./resources/models/WolfSheepPredation/img08.png" /></div>
+<ul> 	 
+    <li>P – wolves-population?: סוניפיקצית אחוז הזאבים בעולם.</li>
+    <li>O – sheep-population?: סוניפיקצית אחוז הכבשים בעולם.</li>
+    <li>U – grass-population?: סוניפיקצית אחוז הדשא בעולם.</li>
+    <li>A – hear-deaths?: סוניפיקצית אחוז הזאבים שמתו בכל פעימת שעון וכן סוניפיקצית אחוז הכבשים שמתו בכל פעימת שעון.</li>
+    <li>Z – hear-births?: סוניפיקצית אחוז הזאבים שנולדו בכל פעימת שעון וכן סוניפיקצית אחוז הכבשים שנולדו בכל פעימת שעון.</li>
+</ul>
+<h5>סוניפיקצית זאב/כיבשה בודד/ת</h5>
+<div class="img-container"><img src="./resources/models/WolfSheepPredation/img09.png" /></div>
+<ul>
+    <li>N – watch-one?: סוניפיקצית מיקומו/ה של זאב/כיבשה בודד/ת, ומהירותו/ה:
+        <ul>
+            <li>מיקום:
+                <ul>
+                    <li>מיקום אופקי ע"י הטיית הצליל לצד ימין או לצד שמאל בהתאם למיקומה היחסי של המולקולה בעולם.</li>
+                    <li>מיקום אנכי ע"י הגברת/הנמכת הצליל ככל שהמולקולה קרובה יותר לקצה התחתון/העליון בהתאמה.</li>
+                </ul>
+            </li>
+            <li>מהירות:
+                <ul>
+                    <li>#,$ – dash-stride: קובע את המרחק שעל האלקטרונים לעבור כדי להשמיע צליל מסוים. ככל שקצב השמעת הצלילים גבוה יותר, כך גם מהירות האלקטרון ולהיפך.</li>
+                </ul>
+            </li>
+            <li>מוות: כאשר הזאב/הכבשה אשר נמצאים במעקב מת/ה, מושמע צליל מיוחד. כמו כן, המעקב קופץ לזאב/כיבשה אקראי/ת אחר/ת בצורה אוטומטית.</li>
+        </ul>
+    </li>
+</ul>
+<h4>ספרות ומקורות</h4>
+<div dir="ltr">
+    <ul>
+        <li>Wilensky, U. (1997). NetLogo Wolf Sheep Predation model. <a href="http://ccl.northwestern.edu/netlogo/models/WolfSheepPredation" target="_blank">http://ccl.northwestern.edu/netlogo/models/WolfSheepPredation</a>. Center for Connected Learning and Computer-Based Modeling, Northwestern University, Evanston, IL.</li>
+        <li>Wilensky, U. (1999). NetLogo. <a href="http://ccl.northwestern.edu/netlogo/" target="_blank">http://ccl.northwestern.edu/netlogo/</a>. Center for Connected Learning and Computer-Based Modeling, Northwestern University, Evanston, IL.</li>
+    </ul>
+</div>

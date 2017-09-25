@@ -1,0 +1,815 @@
+extensions [ sound soundx midi ]
+
+globals [
+  was-set
+  note-volume
+
+  watched-one
+
+  ;; constants for sliders' boundaries
+  min-grass-regrowth-time    max-grass-regrowth-time
+  min-initial-number-sheep   max-initial-number-sheep
+  min-sheep-gain-from-food   max-sheep-gain-from-food
+  min-sheep-reproduce        max-sheep-reproduce
+  min-initial-number-wolves  max-initial-number-wolves
+  min-wolf-gain-from-food    max-wolf-gain-from-food
+  min-wolf-reproduce         max-wolf-reproduce
+  min-exterminate-radius     max-exterminate-radius
+  min-dash-stride            max-dash-stride
+
+  ;; constants for soundx extension
+  current-folder                             ;; the path to the current folder of the model
+  out-of-range-sound-file                    ;; the name of the sound file to be played when an increase/decrease button is pressed while the slider is at its limit
+  expanded-boundaries-sound-file             ;; the name of the sound file to be played when boundaries are auto-corrected
+  dash-sound-file                            ;; the name of the sound file to be played when dashing
+  death-sound-file                           ;; the name of the sound file to be played when a turtle dies
+
+  ;; variables to hold previous state of switches (used for switch state changed event)
+  old-sonify-sheep?
+  old-sonify-wolves?
+  old-sonify-grass?
+  old-sonify-sheep-deaths?
+  old-sonify-sheep-births?
+  old-sonify-wolves-deaths?
+  old-sonify-wolves-births?
+
+  ;; history of graphs' sonification (for closer bounds when changes are minor)
+  wolves-history
+  sheep-history
+  grass-history
+  sheep-deaths-history
+  sheep-births-history
+  wolves-deaths-history
+  wolves-births-history
+
+  wolves-deaths
+  sheep-deaths
+  wolves-births
+  sheep-births
+
+  max-population
+  old-max-population
+
+  max-life-events
+  old-max-life-events
+]
+
+;; Sheep and wolves are both breeds of turtle.
+breed [ sheep a-sheep ]  ;; sheep is its own plural, so we use "a-sheep" as the singular.
+breed [ wolves wolf ]
+breed [ flashes flash ] ;; signifies a wolf eating a sheep
+
+turtles-own [
+  energy ;; both wolves and sheep have energy
+  moved ;; both wolves and sheep move
+]
+patches-own [countdown]
+flashes-own [ clock ]
+
+to setup
+  ;; (for this model to work with NetLogo's new plotting features,
+  ;; __clear-all-and-reset-ticks should be replaced with clear-all at
+  ;; the beginning of your setup procedure and reset-ticks at the end
+  ;; of the procedure.)
+;  __clear-all-and-reset-ticks
+  let bk-was-set was-set
+  clear-all
+  init-constants
+  init-sounds
+  ifelse reset-on-setup? or bk-was-set = 0
+  [ init-variables ]
+  [ reset-old-flags ]
+  set was-set 1
+  ask patches [ set pcolor green ]
+  ;; check GRASS? switch.
+  ;; if it is true, then grass grows and the sheep eat it
+  ;; if it false, then the sheep don't need to eat
+  if grass? [
+    ask patches [
+      set countdown random grass-regrowth-time ;; initialize grass grow clocks randomly
+      set pcolor one-of [green brown]
+    ]
+  ]
+  set-default-shape sheep "sheep-right"
+  create-sheep initial-number-sheep  ;; create the sheep, then initialize their variables
+  [
+    set color white
+    set size 1.5  ;; easier to see
+    set label-color blue - 2
+    set energy random (2 * sheep-gain-from-food)
+    setxy random-xcor random-ycor
+    if ( heading < 360 and heading >= 180 ) [ set shape "sheep-left"]
+  ]
+  set-default-shape wolves "wolf-right"
+  create-wolves initial-number-wolves  ;; create the wolves, then initialize their variables
+  [
+    set color black
+    set size 1.5  ;; easier to see
+    set energy random (2 * wolf-gain-from-food)
+    setxy random-xcor random-ycor
+    if ( heading < 360 and heading >= 180 ) [ set shape "wolf-left"]
+  ]
+  set watched-one nobody
+  if (watch-one != "none")
+    [
+      ifelse (watch-one = "sheep")
+        [set watched-one one-of sheep ask watched-one [ watch-me]]
+        [set watched-one one-of wolves ask watched-one [ watch-me]]
+    ]
+
+  display-labels
+  update-plot
+  reset-ticks
+end
+
+;; used to set the global constants
+;; called on setup
+to init-constants
+  set min-grass-regrowth-time 0
+  set max-grass-regrowth-time 100
+  set min-initial-number-sheep 0
+  set max-initial-number-sheep 250
+  set min-sheep-gain-from-food 0
+  set max-sheep-gain-from-food 50
+  set min-sheep-reproduce 1
+  set max-sheep-reproduce 20
+  set min-initial-number-wolves 0
+  set max-initial-number-wolves 250
+  set min-wolf-gain-from-food 0
+  set max-wolf-gain-from-food 100
+  set min-wolf-reproduce 0
+  set max-wolf-reproduce 20
+  set min-exterminate-radius 0
+  set max-exterminate-radius 10
+  set min-dash-stride 1
+  set max-dash-stride 20
+
+  set note-volume 0.7
+
+  set wolves-history []
+  set sheep-history []
+  set grass-history []
+  set sheep-deaths-history []
+  set sheep-births-history []
+  set wolves-deaths-history []
+  set wolves-births-history []
+  ; constants for soundx files to be used in the module
+  set current-folder word soundx:CURRENT-DIR "/"
+  set out-of-range-sound-file word current-folder "Navajo_drum_short.wav"
+  set expanded-boundaries-sound-file word current-folder "door_chime.wav"
+  set dash-sound-file word current-folder "telephone1.wav"
+  set death-sound-file word current-folder "pop.wav"
+end
+
+;; usued to initialize setting related to the "midi" extension
+to init-sounds
+  midi:all.notes.off 1
+  midi:all.notes.off 2
+  midi:all.notes.off 3
+  midi:all.notes.off 4
+  midi:all.notes.off 5
+  midi:all.notes.off 6
+  midi:all.notes.off 7
+
+  midi:conductor.clear.sheets
+  midi:conductor.setplaymode.endless
+
+  midi:instrument 1 sheep-sonification-instrument + 1
+  midi:instrument 2 wolves-sonification-instrument + 1
+  midi:instrument 3 grass-sonification-instrument + 1
+  midi:instrument 4 sheep-deaths-sonification-instrument + 1
+  midi:instrument 5 sheep-births-sonification-instrument + 1
+  midi:instrument 6 wolves-deaths-sonification-instrument + 1
+  midi:instrument 7 wolves-births-sonification-instrument + 1
+end
+
+;; used to set sonification toggle switches (if "reset-on-setup?" is not switched on)
+to init-variables
+  set sheep-population? false
+  set wolves-population? false
+  set grass-population? false
+  set hear-deaths? false
+  set hear-births? false
+
+  set max-life-events 0
+  set sheep-deaths 0
+  set sheep-births 0
+  set wolves-deaths 0
+  set wolves-births 0
+
+  update-old-flags
+end
+
+;; used to update flags that save the previous state of the sonification toggle switches during every tick
+to update-old-flags
+  set old-sonify-sheep? sheep-population?
+  set old-sonify-wolves? wolves-population?
+  set old-sonify-grass? grass-population?
+  set old-sonify-sheep-deaths? hear-deaths?
+  set old-sonify-sheep-births? hear-births?
+  set old-sonify-wolves-deaths? hear-deaths?
+  set old-sonify-wolves-births? hear-births?
+end
+
+;; used to reset the values of the "previous state" flags of all the switches (when reset-on-setup? switch is OFF), to allow the sonification to continue
+;; even when "setup" button is pressed
+to reset-old-flags
+  set old-sonify-sheep? false
+  set old-sonify-wolves? false
+  set old-sonify-grass? false
+  set old-sonify-sheep-deaths? false
+  set old-sonify-sheep-births? false
+  set old-sonify-wolves-deaths? false
+  set old-sonify-wolves-births? false
+
+  set max-life-events 0
+  set sheep-deaths 0
+  set sheep-births 0
+  set wolves-deaths 0
+  set wolves-births 0
+end
+
+to go
+  if not any? turtles [ stop ]
+
+  if hear-deaths? [ set see-deaths? true ]
+  if hear-births? [ set see-births? true ]
+
+  ask sheep [
+    move
+    if grass? [
+      set energy energy - 1  ;; deduct energy for sheep only if grass? switch is on
+      eat-grass
+    ]
+    reproduce-sheep
+    death
+  ]
+  ask wolves [
+    move
+    set energy energy - 1  ;; wolves lose energy as they move
+    catch-sheep
+    reproduce-wolves
+    death
+  ]
+  if grass? [ ask patches [ grow-grass ] ]
+  ask flashes [ if clock = 0 [ die ] set clock clock - 1 ]
+  if (I-exterminate != "none") [ wack ]
+  tick
+  update-plot
+  display-labels
+  if (watch-one != "none" and watched-one = nobody)
+    [
+      ifelse (watch-one = "sheep")
+        [if count sheep > 0 [ set watched-one one-of sheep ask watched-one [ watch-me]]]
+        [if count wolves > 0 [ set watched-one one-of wolves ask watched-one [ watch-me]]]
+    ]
+
+  if watch-one = "none" [
+    set watched-one nobody
+    reset-perspective
+  ]
+  sonify-model
+end
+
+;; activates, deactivates and updates the sonification of the model
+to sonify-model
+  ;; used to determine how many audiographs are active during current tick (if "audiograph-sonification-orientation?" switch is ON, this will help decided which pan to give to each audiograph)
+  let sonification-current-flags []
+  set sonification-current-flags ( lput wolves-population? sonification-current-flags )
+  set sonification-current-flags ( lput sheep-population? sonification-current-flags )
+  set sonification-current-flags ( lput grass-population? sonification-current-flags )
+  let active-audiographs ( count-active-audiographs sonification-current-flags )
+  let current-active 0
+
+  ;; update global boundaries for maximal population and maximal events of deaths/births that happened in a single tick since last "setup"
+  if max (list count turtles count sheep count wolves) > max-population [ set max-population max (list count turtles count sheep count wolves) ]
+  if max (list sheep-deaths sheep-births wolves-deaths wolves-births) > max-life-events [ set max-life-events max (list sheep-deaths sheep-births wolves-deaths wolves-births) ]
+
+  if sheep-population? != old-sonify-sheep? [ toggle-audiograph-sonification sheep-population? 1 sheep-sonification-note (count sheep) 0 max-population ] ;; togge sheep population audiograph on/off
+  if sheep-population? ;; update the sonification of the sheep population audiograph
+  [
+    let sheep-value count sheep
+    set sheep-history update-audiograph-history sheep-value sheep-history history-size ;; update audiograph's history
+    set max-population update-audiograph-bounds max-population old-max-population sheep-history ;; update top boundary (if required)
+    set old-max-population max-population ;; save for previous state
+    adjust-audiograph-sonification 1 sheep-value 0 max-population sheep-history ;; readjust the sonification
+    set sheep-population? count-stop-at-zero 1 sheep-value ;; check if counter needs to be paused/resumed/stopped
+    set current-active auto-pan-graph 1 current-active active-audiographs ;; pan the audiograph (if required)
+  ]
+
+  if wolves-population? != old-sonify-wolves? [ toggle-audiograph-sonification wolves-population? 2 wolves-sonification-note (count wolves) 0 max-population ] ;; toggle the wolves population audiograph on/off
+  if wolves-population? ;; update the sonification of the wolves population audiograph
+  [
+    let wolves-value count wolves
+    set wolves-history update-audiograph-history wolves-value wolves-history history-size ;; update audiograph's history
+    set max-population update-audiograph-bounds max-population old-max-population wolves-history ;; update top boundary (if required)
+    set old-max-population max-population ;; save for previous state
+    adjust-audiograph-sonification 2 wolves-value 0 max-population wolves-history ;; readjust the sonification
+    set wolves-population? count-stop-at-zero 2 wolves-value ;; check if counter needs to be paused/resumed/stopped
+    set current-active auto-pan-graph 2 current-active active-audiographs ;; pan the audiograph (if required)
+  ]
+
+  if grass-population? != old-sonify-grass? [ toggle-audiograph-sonification grass-population? 3 grass-sonification-note (count patches with [ pcolor = green ]) 0 max-population ] ;; toggle the grass population audiograph on/off
+  if grass-population? ;; update the sonification of the grass population audiograph
+  [
+    let grass-value (count patches with [ pcolor = green ])
+    set grass-history update-audiograph-history grass-value grass-history history-size ;; update audiograph's history
+    set max-population update-audiograph-bounds max-population old-max-population grass-history ;; update top boundary (if required)
+    set old-max-population max-population ;; save for previous state
+    adjust-audiograph-sonification 3 grass-value 0 max-population grass-history ;; readjust the sonification
+    set grass-population? count-stop-at-zero 3 grass-value ;; check if counter needs to be paused/resumed/stopped
+    set current-active auto-pan-graph 3 current-active active-audiographs ;; pan the audiograph (if required)
+  ]
+
+  if hear-deaths? != old-sonify-sheep-deaths? [ toggle-audiograph-sonification hear-deaths? 4 sheep-deaths-sonification-note sheep-deaths 0 max-life-events ] ;; toggle the sonification of sheep deaths
+  if hear-deaths? ;; update the sonification of sheep deaths
+  [
+    set sheep-deaths-history update-audiograph-history sheep-deaths sheep-deaths-history history-size ;; update the history
+    set max-life-events update-audiograph-bounds max-life-events old-max-life-events sheep-deaths-history ;; update boundaries (if required)
+    set old-max-life-events max-life-events
+    adjust-audiograph-sonification 4 sheep-deaths 0 max-life-events sheep-deaths-history ;; update the sonification
+    midi:pan 4 -1 ;; pan is set to -1 (left side) manually due to automatic turning on of wolves deaths if this audiograph in on
+  ]
+
+  if hear-births? != old-sonify-sheep-births? [ toggle-audiograph-sonification hear-births? 5 sheep-births-sonification-note sheep-births 0 max-life-events ] ;; toggle the sonification of sheep births
+  if hear-births? ;; update the sonification of sheep births
+  [
+    set sheep-births-history update-audiograph-history sheep-births sheep-births-history history-size ;; update the history
+    set max-life-events update-audiograph-bounds max-life-events old-max-life-events sheep-births-history ;; updated boundaries (if required)
+    set old-max-life-events max-life-events
+    adjust-audiograph-sonification 5 sheep-births 0 max-life-events sheep-births-history ;; update the sonification
+    midi:pan 5 -1 ;; pan is set to 1 (right side) manually due to automatic turning on of wolves births if this audiograph is on
+  ]
+
+  if hear-deaths? != old-sonify-wolves-deaths? [ toggle-audiograph-sonification hear-deaths? 6 wolves-deaths-sonification-note wolves-deaths 0 max-life-events ] ;; toggle the sonification of wolves deaths
+  if hear-deaths? ;; update the sonification of wolves deaths
+  [
+    set wolves-deaths-history update-audiograph-history wolves-deaths wolves-deaths-history history-size ;; update the history
+    set max-life-events update-audiograph-bounds max-life-events old-max-life-events wolves-deaths-history ;; update boundaries (if required)
+    set old-max-life-events max-life-events
+    adjust-audiograph-sonification 6 wolves-deaths 0 max-life-events wolves-deaths-history ;; update the sonification
+    midi:pan 6 1 ;; pan is set to 1 (right side) manually due to automatic turning on of sheep deaths if this audiograph is on
+  ]
+
+  if hear-births? != old-sonify-wolves-births? [ toggle-audiograph-sonification hear-births? 7 wolves-births-sonification-note wolves-births 0 max-life-events ]
+  if hear-births? ;; update the sonification of sheep deaths
+  [
+    set wolves-births-history update-audiograph-history wolves-births wolves-births-history history-size ;; update the history
+    set max-life-events update-audiograph-bounds max-life-events old-max-life-events wolves-births-history ;; update boundaries
+    set old-max-life-events max-life-events
+    adjust-audiograph-sonification 7 wolves-births 0 max-life-events wolves-births-history ;; update the sonification
+    midi:pan 7 1 ;; pan is set to 1 (right side) manually due to automatic turning on of sheep births
+  ]
+
+  set sheep-deaths 0
+  set sheep-births 0
+  set wolves-deaths 0
+  set wolves-births 0
+
+  update-old-flags
+end
+
+to stop-sonification
+  set wolves-population? false
+  set sheep-population? false
+  set grass-population? false
+  set hear-deaths? false
+  set hear-births? false
+
+  sonify-model
+end
+
+to move  ;; turtle procedure
+  rt random 20
+  lt random 20
+  if (breed = sheep )
+   [ ifelse ( heading < 360 and heading >= 180 ) [ set shape "sheep-left"] [ set shape "sheep-right" ]]
+   if (breed = wolves)
+   [ ifelse ( heading < 360 and heading >= 180 ) [ set shape "wolf-left"] [ set shape "wolf-right" ]]
+  fd 0.2
+  set moved (moved + 0.2)
+  if floor moved / dash-stride  > 1 [
+    if watched-one != nobody and who = [ who ] of watched-one [ sonify-event dash-sound-file ((((ycor / min-pycor) / 2) + 0.5) * 0.9 + 0.1) (xcor / max-pxcor) ]
+    set moved (moved mod dash-stride)
+  ]
+end
+
+to eat-grass  ;; sheep procedure
+  ;; sheep eat grass, turn the patch brown
+  if pcolor = green [
+    set pcolor brown
+    set energy energy + sheep-gain-from-food  ;; sheep gain energy by eating
+  ]
+end
+
+to reproduce-sheep  ;; sheep procedure
+  if random-float 100 < sheep-reproduce [  ;; throw "dice" to see if you will reproduce
+    set energy (energy / 2)                ;; divide energy between parent and offspring
+    hatch 1 [ rt random-float 360 fd 1 ]   ;; hatch an offspring and move it forward 1 step
+    set sheep-births sheep-births + 1
+    if see-births? [ celebrate-sheep-birth ]
+  ]
+end
+
+to reproduce-wolves  ;; wolf procedure
+  if random-float 100 < wolf-reproduce [  ;; throw "dice" to see if you will reproduce
+    set energy (energy / 2)               ;; divide energy between parent and offspring
+    hatch 1 [ rt random-float 360 fd 1
+      set wolves-births wolves-births + 1
+    if see-births? [ celebrate-wolf-birth]]  ;; hatch an offspring and move it forward 1 step
+  ]
+end
+
+to catch-sheep  ;; wolf procedure
+  let prey one-of sheep-here                    ;; grab a random sheep
+  if prey != nobody                             ;; did we get one?  if so,
+    [ ask prey [ if see-deaths? [make-sheep-ghosts ]
+      observe
+;      ask prey [
+;      if (watch-one = "sheep"  and who = ([who] of watched-one)) [ make-sheep-ghosts-watch-one ]]
+      if watched-one != nobody and who = [ who ] of watched-one [ sonify-event death-sound-file 0.5 0 ]
+      set sheep-deaths sheep-deaths + 1
+      die                            ;; kill it
+    ]
+      set energy energy + wolf-gain-from-food
+;      if see-ghosts? [hatch 1 [set breed flashes set shape "ghost" set color yellow set size 1 set clock 2 ]
+    ]
+        ;; get energy from eating
+end
+
+to death  ;; turtle procedure
+  ;; when energy dips below zero, die
+  if energy < 0 [
+;                  if ((breed = sheep) and watch-one = "sheep"  and who = ([who] of watched-one)) [ make-sheep-ghosts-watch-one ]
+;                  if ((breed = wolves) and watch-one = "wolf"  and who = ([who] of watched-one)) [ make-wolf-ghosts-watch-one ]
+    if see-deaths? [
+      ifelse (breed = sheep )
+      [
+        make-sheep-ghosts
+        set sheep-deaths sheep-deaths + 1
+      ]
+      [
+        make-wolf-ghosts
+        set wolves-deaths wolves-deaths + 1
+      ]
+    ]
+    observe
+    if watched-one != nobody and who = [ who ] of watched-one [ sonify-event death-sound-file 0.5 0 ]
+    die
+  ]
+
+end
+
+to grow-grass  ;; patch procedure
+  ;; countdown on brown patches: if reach 0, grow some grass
+  if pcolor = brown [
+    ifelse countdown <= 0
+      [ set pcolor green
+        set countdown grass-regrowth-time ]
+      [ set countdown countdown - 1 ]
+  ]
+end
+
+to wack
+    if mouse-down? and mouse-inside? [
+    ifelse (I-exterminate = "sheep")
+      [ ask patch mouse-xcor mouse-ycor [ ask sheep in-radius exterminate-radius [ die ]]]
+      [ifelse (I-exterminate = "wolves")
+      [ask patch mouse-xcor mouse-ycor [ ask wolves in-radius exterminate-radius [ die ]] ]
+      [ask patch mouse-xcor mouse-ycor [ ask patches in-radius exterminate-radius [ set pcolor brown ]]]]]
+end
+
+;; does the same job as "wack" method, but the extinction is centered around a random set of pxcor pycor
+to manual-wack
+  let killed 0
+  let total 0
+
+  if I-exterminate = "wolves" or I-exterminate = "sheep" [ set total count turtles ]
+  if I-exterminate = "grass" [ set total count patches ]
+
+  if (I-exterminate != "none")
+  [
+    ifelse (I-exterminate = "sheep")
+    [
+      ask patch random-pxcor random-pycor
+      [
+        set killed count sheep in-radius exterminate-radius
+        ask sheep in-radius exterminate-radius [ die ]
+      ]
+    ]
+    [
+      ifelse (I-exterminate = "wolves")
+      [
+        ask patch random-pxcor random-pycor
+        [
+          set killed count wolves in-radius exterminate-radius
+          ask wolves in-radius exterminate-radius [ die ]
+        ]
+      ]
+      [
+        ask patch random-pxcor random-pycor
+        [
+          set killed count patches in-radius exterminate-radius with [ pcolor = green ]
+          ask patches in-radius exterminate-radius [ set pcolor brown ]
+        ]
+      ]
+    ]
+  ]
+
+  if total != 0 [ sonify-event death-sound-file ((8 * (killed / total))) 0 ]
+end
+
+to observe
+    if (
+    (watched-one = nobody) and
+    (watch-one != "none"))
+      [ ifelse ( watch-one = "sheep")
+        [if count sheep > 0 [ set watched-one one-of sheep ask watched-one [ watch-me]] ]
+        [if count wolves > 0 [ set watched-one one-of wolves ask watched-one [ watch-me]] ]
+      ]
+end
+
+to make-sheep-ghosts
+  hatch 1 [set breed flashes set shape "ghost"
+      set color yellow set size 2 set clock 2 ]
+end
+
+to make-wolf-ghosts
+  hatch 1 [set breed flashes set shape "ghost"
+           set color red - 1 set size 2 set clock 2 ]
+end
+
+to make-sheep-ghosts-watch-one
+  hatch 1 [set breed flashes set shape "ghost"
+      set color yellow  set size 3 set clock 4 ]
+end
+
+to make-wolf-ghosts-watch-one
+  hatch 1 [set breed flashes set shape "ghost"
+      set color yellow set size 3 set clock 4 ]
+end
+
+to celebrate-sheep-birth
+  hatch 1 [set breed flashes set shape "circle 3"
+           set color pink + 1 set size 2.5 set clock 3 ]
+end
+
+to celebrate-wolf-birth
+  hatch 1 [set breed flashes set shape "circle 3"
+           set color cyan + 1 set size 2.5 set clock 3 ]
+end
+
+to update-plot
+  set-current-plot "populations"
+  set-current-plot-pen "sheep"
+  plot count sheep
+  set-current-plot-pen "wolves"
+  plot count wolves
+  if grass? [
+    set-current-plot-pen "grass / 4"
+    plot count patches with [pcolor = green] / 4  ;; divide by four to keep it within similar
+                                                  ;; range as wolf and sheep populations
+  ]
+end
+
+to display-labels
+  ask turtles [ set label "" ]
+  if show-energy? [
+    ask wolves [ set label round energy ]
+    if grass? [ ask sheep [ set label round energy ] ]
+  ]
+end
+
+;; updates the content of the "watch-one" chooser
+to next-watch-one
+  ifelse watch-one = "none"
+  [ set watch-one "sheep" ]
+  [
+    ifelse watch-one = "sheep"
+    [ set watch-one "wolf" ]
+    [ set watch-one "none" ]
+  ]
+end
+
+;; updates the content of the "I-exterminate" chooser
+to next-I-exterminate
+  ifelse I-exterminate = "none"
+  [ set I-exterminate "wolves" ]
+  [
+    ifelse I-exterminate = "wolves"
+    [ set I-exterminate "sheep" ]
+    [
+      ifelse I-exterminate = "sheep"
+      [ set I-exterminate "grass" ]
+      [ set I-exterminate "none" ]
+    ]
+  ]
+end
+
+;; This procedure is called whenever a slider's value is updated, in order to sonify the current value of that slider
+to sonify-slider [ current-value min-value max-value ]
+  if max-value != min-value [ sound:play-note (item slider-instrument sound:instruments) 44 round (127 * ((current-value - min-value) / (max-value - min-value))) 0.25 ]
+end
+
+;; This procedure is called whenever a switch value is changed using a corresponding button (not the switch itself)
+to sonify-switch [ current-value ]
+  ifelse current-value
+  [ sound:play-note (item slider-instrument sound:instruments) 44 80 0.25 ]
+  [ sound:play-note (item slider-instrument sound:instruments) 44 25 0.25 ]
+end
+
+;; This procedure is called whenever a special event shuold be sonified
+;; e.g. trying to change slider value beyond bounds
+;; sound-file: path to the file that is used for this event
+;; volume: 0 to 1
+;; pan: -1 to 1
+to sonify-event [ sound-file volume pan ]
+  soundx:play-soundfile sound-file (12 * (volume - 0.5)) pan ; expecting volume to be in the range 0-1 (like in midi extension)
+end
+
+;; receives a list of flags indicating which audiographs are active, reports back the number of audiographs that are active
+to-report count-active-audiographs [ sonificfation-flags ]
+  let active 0
+  let list-size length sonification-flags
+  while [ list-size > 0 ][
+    if ( item ( list-size - 1) sonification-flags ) [ set active ( active + 1 ) ]
+    set list-size (list-size - 1)
+  ]
+  report active
+end
+
+
+;; receives the number of panned audiographs and total number of active audiographs, decides what should be the pan of the next audiograph
+;;
+to-report get-pan [ current-active active-audiographs ]
+  ifelse active-audiographs > 1
+  [
+    if ( current-active mod 3 ) = 0 [ report -1 ]
+    if ( current-active mod 3 ) = 1 [ report 1 ]
+    if ( current-active mod 3 ) = 2 [ report 0 ]
+  ]
+  [ report 0 ]
+end
+
+;; given a channel on which the audiograph is active, the number of active audiographs (that were already panned before checking pan for this audiograph)
+;; and total number of audiographs available, updates the pan of the audiograph to left/right/middle (if required)
+to-report auto-pan-graph [ channel current-graph-index active-audiographs ]
+  ifelse audiograph-sonification-orientation?
+  [ midi:pan channel ( get-pan current-graph-index active-audiographs ) ]
+  [ midi:pan channel 0 ]
+  report (current-graph-index + 1)
+end
+
+;; given whether the sonification should start/stop, a channel on which the audiograph is (or should be) active, the note to be played (if activated), current value and boundaries,
+;; activates or deactivates the sonification
+to toggle-audiograph-sonification [ start? channel note current-value min-value max-value ]
+  let min-volume min-value
+  let max-volume max-value
+  let current-volume current-value
+
+  ifelse start? [
+    if min-value != 0 [
+      set min-volume 0
+      set max-volume (max-value - min-value)
+      set current-volume (current-value - min-value)
+    ]
+    midi:noteon channel note note-volume
+    ifelse max-value != 0
+    [ midi:pitch.bend channel ((current-value / max-value) - 0.5 ) * 2 ]
+    [ midi:pitch.bend channel -1 ]
+  ]
+  [ midi:all.notes.off channel ]
+end
+
+;; given a channel on which the sonification is being active, the current value, lower and upper bounds and audiograph's history,
+;; updates the sonification of the audiograph according to the new value
+;; uses pitch bending for sonification, can be extended/changed to use volume or another feature instead.
+to adjust-audiograph-sonification [ channel current-value min-value max-value history ]
+  if sonify-from-history? and length history > 0 [
+    set min-value min history
+    set max-value max history
+  ]
+  let min-volume min-value
+  let max-volume max-value
+  let current-volume current-value
+
+  if min-value != 0 [
+    set min-volume 0
+    set max-volume (max-value - min-value)
+    set current-volume (current-value - min-value)
+  ]
+  ifelse max-volume != 0
+  [ midi:pitch.bend channel ((current-volume / max-volume) - 0.5 ) * 2 ]
+  [ midi:pitch.bend channel -1 ]
+end
+
+;; given an audiographs value, its history and history length, updates the history with the new value
+;; if history is "full" (reached maximal length), removes the most dated value and puts in the new one
+to-report update-audiograph-history [ new-value history max-history-size ]
+    ifelse length history < max-history-size
+    [ set history lput new-value history ]
+    [ set history but-first lput new-value history ]
+    report history
+end
+
+;; receives current upper bound, the upper bound from previous tick (current bound can be passed twice instead) and the history (of length >= 2) of audiograph history
+;; checks if the value exceeds the current boundary, and if so increases it by 10% (easily extendable to update by any needed percent)
+;; reports back the updated boundary (or the current one, if no changes were made)
+to-report update-audiograph-bounds [ current-max-value prev-max-value history ]
+  let new-max-value current-max-value
+  if length history > 1 [
+    let current-value item (length history - 1) history
+    let prev-value item (length history - 2) history
+    if auto-correct-unbound-values? and current-max-value != 0 and prev-max-value != 0 [
+      if (prev-value != current-value) and ((prev-value / prev-max-value) = (current-value / current-max-value)) [
+        set new-max-value (1.1 * current-max-value)
+        sonify-event expanded-boundaries-sound-file 0.5 0
+      ]
+    ]
+  ]
+  report new-max-value
+end
+
+;; decides whether a counter's sonification should be paused or even stopped due to reaching the value of zero
+;; receives the channel (1-16) on which that counter is being sonified and its value
+;; note: this method is easily extendable to check any value, not only 0.
+to-report count-stop-at-zero [ channel count-value ]
+  let resume? true
+  ifelse count-value = 0
+  [
+    if stop-count-on-zero-value?
+    [
+      ifelse auto-resume-count?
+      [ midi:volume channel 0 ]
+      [
+        set resume? false
+        midi:all.notes.off channel
+      ]
+    ]
+  ]
+  [ if auto-resume-count? [ midi:volume channel note-volume ] ]
+  report resume?
+end
+
+;; receives a value of a slider, its boundaries, required precision (number of decimal places) for the new value and reports the incremented value while sonifying that value
+to-report increase-slider-value [ variable increase-by min-limit max-limit prec ]
+  set variable (variable + increase-by)
+  ifelse variable > max-limit
+  [
+    set variable max-limit
+    sonify-event out-of-range-sound-file 0.5 0
+  ]
+  [ sonify-slider variable min-limit max-limit ]
+  report precision variable prec
+end
+
+;; receives a value of a slider, its boundaries, required precision (number of decimal places) for the new value and reports the decremented value while sonifying that value
+to-report decrease-slider-value [ variable decrease-by min-limit max-limit prec ]
+  set variable (variable - decrease-by)
+  ifelse variable < min-limit
+  [
+    set variable min-limit
+    sonify-event out-of-range-sound-file 0.5 0
+  ]
+  [ sonify-slider variable min-limit max-limit ]
+  report precision variable prec
+end
+
+; *** NetLogo 4.0.2 Model Copyright Notice ***
+;
+; This model was created as part of the project: CONNECTED MATHEMATICS:
+; MAKING SENSE OF COMPLEX PHENOMENA THROUGH BUILDING OBJECT-BASED PARALLEL
+; MODELS (OBPML).  The project gratefully acknowledges the support of the
+; National Science Foundation (Applications of Advanced Technologies
+; Program) -- grant numbers RED #9552950 and REC #9632612.
+;
+; Copyright 1997 by Uri Wilensky.  All rights reserved.
+;
+; Permission to use, modify or redistribute this model is hereby granted,
+; provided that both of the following requirements are followed:
+; a) this copyright notice is included.
+; b) this model will not be redistributed for profit without permission
+;    from Uri Wilensky.
+; Contact Uri Wilensky for appropriate licenses for redistribution for
+; profit.
+;
+; This model was converted to NetLogo as part of the projects:
+; PARTICIPATORY SIMULATIONS: NETWORK-BASED DESIGN FOR SYSTEMS LEARNING
+; IN CLASSROOMS and/or INTEGRATED SIMULATION AND MODELING ENVIRONMENT.
+; The project gratefully acknowledges the support of the
+; National Science Foundation (REPP & ROLE programs) --
+; grant numbers REC #9814682 and REC-0126227.
+; Converted from StarLogoT to NetLogo, 2000.
+;
+; To refer to this model in academic publications, please use:
+; Wilensky, U. (1997).  NetLogo Wolf Sheep Predation model.
+; http://ccl.northwestern.edu/netlogo/models/WolfSheepPredation.
+; Center for Connected Learning and Computer-Based Modeling,
+; Northwestern University, Evanston, IL.
+;
+; In other publications, please use:
+; Copyright 1997 Uri Wilensky.  All rights reserved.
+; See http://ccl.northwestern.edu/netlogo/models/WolfSheepPredation
+; for terms of use.
+;
+; *** End of NetLogo 4.0.2 Model Copyright Notice ***
